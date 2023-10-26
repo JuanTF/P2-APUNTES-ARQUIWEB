@@ -33,3 +33,365 @@ ICONOS:
 primary(azul) , warn (rojo), accent (fucsia)
 
 DEPURAR: ng s
+
+
+
+
+------------------------------------------------------
+ENVIRONMENTS
+
+export const environment = {
+    production: false,
+    base: "http://localhost:8080",
+};
+
+---------------------------------------------------------
+SERVICES
+
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http'; //COLOCAR
+import { Subject } from 'rxjs'; //COLOCAR
+
+const base_url = environment.base;
+
+
+export class DessertService {
+  private url = `${base_url}/dulces`;
+  private listaCambio = new Subject<Dessert[]>();
+  constructor(private http: HttpClient) {}
+
+  list() {
+    return this.http.get<Dessert[]>(this.url);
+  }
+  insert(de: Dessert) {
+    return this.http.post(this.url, de);
+  }
+  setList(listaNueva: Dessert[]) {
+    this.listaCambio.next(listaNueva);
+  }
+  getList() {
+    return this.listaCambio.asObservable();
+  }
+}
+
+-----------------------------------------------------------
+MODEL 
+export class Dessert{
+    idDessert:number=0
+    nameDessert:string=""
+    dueDateDessert:Date=new Date(Date.now())
+    typeDessert:string=""
+    caloryDessert:number=0
+}
+
+----------------------------------------------------------
+APP.COMPONENT.HTML
+
+<mat-toolbar color="primary"> <!--MODIFICACION DE LOS COLORES: warn, primary-->
+  <mat-icon>menu</mat-icon>
+    <button mat-button [matMenuTriggerFor]="menuEquipaje">Postre</button>
+  </mat-toolbar>
+
+  <mat-menu #menuEquipaje="matMenu">
+    <button mat-menu-item routerLink="/tafur/nuevo"><mat-icon color="primary">add_box</mat-icon> Registrar</button>
+    <button mat-menu-item routerLink="/tafur"><mat-icon color="primary">library_add</mat-icon> Listar</button>
+  </mat-menu>
+<router-outlet></router-outlet>
+
+---------------------------------------------------------
+APP - MODULE
+
+import { HttpClientModule } from '@angular/common/http';
+import { MatTableModule } from '@angular/material/table'
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule}  from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatButtonModule } from '@angular/material/button';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatIconModule } from'@angular/material/icon';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatMenuModule } from '@angular/material/menu';
+
+
+
+HttpClientModule,
+    MatTableModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatDatepickerModule, 
+    MatNativeDateModule,
+    MatButtonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatIconModule,
+    MatPaginatorModule,
+    MatToolbarModule,
+    MatMenuModule
+
+
+------------------------------------------------------------------------
+APP.ROUTING.TS
+
+const routes: Routes = [{
+  path:'tafur',component:DessertComponent, children:[
+    { path:'nuevo', component:CreaeditaDessertComponent }
+  ]
+}];
+------------------------------------------------------------------------
+DESSERT.COMPONENT.TS
+
+export class DessertComponent {
+  constructor(public route: ActivatedRoute) {}
+
+  ngOnInit(): void {}
+}
+
+
+-----------------------------------------------------------------------
+DESSERT.COMPONENT.HTML
+
+<router-outlet></router-outlet>
+<div [hidden]="route.children.length !== 0">
+  <app-listar-dessert></app-listar-dessert>
+</div>
+
+
+PARTE 2
+*****************************************************************************************
+LISTAR - POSTRE.TS
+
+import { Component, OnInit, ViewChild } from '@angular/core'; //OBSER OnInit
+import { MatTableDataSource } from '@angular/material/table' //COLOCAR M
+import { MatPaginator } from '@angular/material/paginator'; //COLOCAR
+
+
+
+export class ListarDessertComponent implements OnInit {
+  dataSource: MatTableDataSource<Dessert> = new MatTableDataSource();
+  displayedColumns: string[] =
+  ['codigo', 'nombre', 'tipo']
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  constructor(private dS: DessertService) {}
+
+  ngOnInit(): void {
+    this.dS.list().subscribe((data) => {
+      this.dataSource = new MatTableDataSource(data);
+      this.dataSource.paginator = this.paginator;
+    });
+    this.dS.getList().subscribe((data) => {
+      this.dataSource = new MatTableDataSource(data);
+      this.dataSource.paginator = this.paginator;
+    }); 
+  }
+}
+
+
+
+------------------------------------------------------------------------
+LISTAR - POSTRE.HTML
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <br>
+  <div style=" text-align: center;"> 
+    <h2>LISTA DE POSTRES</h2> 
+  </div>
+
+  <div class="container">
+
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+
+      <ng-container matColumnDef="codigo">
+        <th mat-header-cell *matHeaderCellDef> Codigo </th>
+        <td mat-cell *matCellDef="let element"> {{element.idDessert}} </td>
+      </ng-container>
+    
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef> Estado </th>
+        <td mat-cell *matCellDef="let element"> {{element.nameDessert}} </td>
+      </ng-container>
+    
+      <ng-container matColumnDef="tipo">
+        <th mat-header-cell *matHeaderCellDef> Precio </th>
+        <td mat-cell *matCellDef="let element"> {{element.typeDessert}} </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <br>
+    <mat-paginator 
+    [pageSizeOptions]="[5, 10, 20]" 
+    showFirstLastButtons aria-label="Select page">
+  </mat-paginator>
+  
+</div>
+</body>
+</html>
+ 
+ 
+ESTILOS:
+table {
+    width: 70%;
+}
+
+------------------------------------------------------------------------------------
+CREAR - DESSERT.COMPONENT.TS
+
+import { Component, OnInit } from '@angular/core';//IMPORT
+import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';//IMPORT
+import { Router } from '@angular/router'; //IMPORT
+import * as moment from 'moment'; //IMPORT
+
+
+export class CreaeditaDessertComponent implements OnInit{
+  form: FormGroup = new FormGroup({});
+  dessert: Dessert = new Dessert();
+  mensaje: string = '';
+  maxFecha: Date = moment().add(-1, 'days').toDate();
+
+  estado: { value: string, viewValue: string }[] = [
+    { value: 'part1', viewValue: 'Part1'},
+    { value: 'part2', viewValue: 'Part2' },
+    { value: 'part3', viewValue: 'Part3' },
+  ];
+ 
+  constructor(
+    private dS: DessertService,
+    private router: Router,
+    private formBuilder: FormBuilder,
+  ) {}
+
+  ngOnInit(): void {
+    this.form = this.formBuilder.group({
+      nameDessert: ['', Validators.required],
+      dueDateDessert: ['', Validators.required],
+      typeDessert: ['', [Validators.required]],
+      caloryDessert: [''],
+    });
+  }
+  registrar(): void {
+    if (this.form.valid) {
+      this.dessert.nameDessert = this.form.value.nameDessert;
+      this.dessert.dueDateDessert = this.form.value.dueDateDessert;
+      this.dessert.typeDessert = this.form.value.typeDessert;
+      this.dessert.caloryDessert = this.form.value.caloryDessert;
+
+      this.dS.insert(this.dessert).subscribe((data) => {
+        this.dS.list().subscribe((data) => {
+        this.dS.setList(data);
+        });
+      });
+      this.router.navigate(['/tafur/nuevo']);
+      this.ngOnInit();
+
+    } else {
+      this.mensaje = 'Por favor complete todos los campos obligatorios.';
+    }
+  }
+
+  obtenerControlCampo(nombreCampo: string): AbstractControl {
+    const control = this.form.get(nombreCampo);
+    if (!control) {
+      throw new Error(`Control no encontrado para el campo ${nombreCampo}`);
+    }
+    return control;
+  }
+}
+
+
+--------------------------------------------------------------------
+CREAR - DESSERT.COMPONENT.HTML
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <br>
+    <div style=" text-align: center;"> 
+        <h2>REGISTRAR POSTRE</h2> 
+    </div>
+
+    <div class="container" style=" text-align: center;">
+        <form [formGroup]="form" (submit)="registrar()" class="example-form" >
+
+            <mat-form-field class="example-full-width">
+              <mat-label>Nombre postre</mat-label>
+              <input matInput placeholder="Nombre" formControlName="nameDessert">
+              
+              <mat-error
+              *ngIf="obtenerControlCampo('nameDessert')?.errors?.['required']"
+              >El nombre es obligatorio.
+              </mat-error>
+            </mat-form-field>
+
+            <br>
+            <mat-form-field>
+                <mat-label>Fecha de vencimiento</mat-label>
+                <input
+                matInput 
+                [matDatepicker]="picker"
+                placeholder="Fecha recepción" 
+                formControlName="dueDateDessert"    
+                [max]="maxFecha">
+                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+                
+                <mat-error
+                    *ngIf="obtenerControlCampo('dueDateDessert')?.errors?.['required']"
+                    >La fecha es obligatoria.
+                </mat-error>
+            </mat-form-field>
+
+            <br>
+            <mat-form-field>
+                <mat-label>Tipo</mat-label>
+                <mat-select formControlName="typeDessert">
+                  <mat-option *ngFor="let trT of estado" [value]="trT.value"> <!--Se modifico la "t"-->
+                    {{trT.viewValue}}
+                  </mat-option>
+                  
+                  <mat-error
+                    *ngIf="obtenerControlCampo('typeDessert')?.errors?.['required']"
+                    > El TIPO es obligatorio.
+                  </mat-error>
+                </mat-select>
+            </mat-form-field>
+            
+            <br>
+            <mat-form-field class="example-full-width">
+                <mat-label>Calorias</mat-label>
+                <input matInput placeholder="caloryDessert" formControlName="priceEquipaje">
+            </mat-form-field>
+
+            <br>
+            <button mat-button color="primary"> <mat-icon color="primary">library_add</mat-icon> Registrar</button>
+        </form>
+    </div>
+</body>
+</html>
+
+
+ESTILOS:
+mat-form-field {
+    width: 70%;
+}
