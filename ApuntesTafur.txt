@@ -1,0 +1,35 @@
+PROYECTO: 
+ng new TafurRecuay
+cd TafurRecuay
+
+CARPETAS:
+SRC:
+environments
+
+APP:
+models
+services
+components
+
+SERVICE Y COMPONENTES:
+ng g s services/inventario --skip-tests
+
+ng g c components/inventario --skip-tests
+ng g c components/inventario/tafur-listar --skip-tests
+ng g c components/inventario/tafur-crear --skip-tests
+
+ARCHIVOS ADICIONALES:
+ng add @angular/material
+npm install moment
+
+REFERENCIAS:
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+ICONOS:
+<mat-icon>add_box</mat-icon>
+<mat-icon>library_add</mat-icon>
+<mat-icon>add_circle</mat-icon>
+
+primary(azul) , warn (rojo), accent (fucsia)
+
+DEPURAR: ng s
